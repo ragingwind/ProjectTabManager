@@ -76,7 +76,7 @@ gulp.task('copy', function() {
     .pipe(gulp.dest('app'));
 });
 
-gulp.task('vulcanize', function() {
+gulp.task('elements', function() {
   return gulp.src('src/elements/*.html')
     .pipe($.debug({title: 'vulcanize'}))
     .pipe($.vulcanize({
@@ -84,29 +84,10 @@ gulp.task('vulcanize', function() {
       inlineCss: true,
       inlineScripts: true
     }))
-    .pipe($.rename({prefix: 'vulcanized.'}))
-    .pipe(gulp.dest('app/elements/'));
-});
-
-gulp.task('minify-html', ['vulcanize'], function() {
-  return gulp.src('app/elements/*.html')
-    .pipe($.minifyHtml({collapseWhitespace: true, removeComments: true}))
-    .pipe(gulp.dest('app/elements/'));
-});
-
-gulp.task('elements', ['minify-html'], function() {
-  return gulp.src('app/elements/*.html')
     .pipe($.crisper())
+    .pipe($.if('*.js', $.babel({compact: false, presets: ['es2015']})))
+    .pipe($.if('*.html', $.htmlmin({collapseWhitespace: true, minifyCSS: true, removeComments: true})))
     .pipe(gulp.dest('app/elements/'));
-});
-
-gulp.task('replace', function() {
-  return gulp.src('app/app.html')
-    .pipe($.debug({title: 'replace'}))
-    .pipe($.htmlReplace({
-      'vulcanized': '<link rel="import" href="elements/vulcanized.app_elems.html">'
-    }))
-    .pipe(gulp.dest('app/'));
 });
 
 gulp.task('zip', function() {
@@ -145,7 +126,6 @@ gulp.task('build', function() {
       'elements'
     ],
     'copy',
-    'replace',
     'markdown',
     // 'version',
     'zip'
